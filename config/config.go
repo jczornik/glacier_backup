@@ -7,18 +7,18 @@ import (
 	"github.com/go-yaml/yaml"
 )
 
-type ToBackup = string
-type Manifest = string
+type BackupSrc = string
+type BackupDst = string
 
 type Config struct {
 	Local struct {
-		Paths map[ToBackup]Manifest `yaml:"paths"`
+		Paths map[BackupSrc]BackupDst `yaml:"paths"`
 	} `yaml:"local"`
 }
 
 func (c *Config) validate() error {
-	for _, path := range c.Local.Paths {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
+	for src := range c.Local.Paths {
+		if _, err := os.Stat(src); os.IsNotExist(err) {
 			return err
 		}
 	}

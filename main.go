@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/jczornik/glacier_backup/config"
+	"github.com/jczornik/glacier_backup/incrbackup"
 	"github.com/jczornik/glacier_backup/tools"
 )
 
@@ -27,5 +28,10 @@ func main() {
 		os.Exit(3)
 	}
 
-	fmt.Println(cfg)
+	for src, dst := range cfg.Local.Paths {
+		if err := incrbackup.CreateBackup(src, dst); err != nil {
+			fmt.Println(err)
+			os.Exit(4)
+		}
+	}
 }
