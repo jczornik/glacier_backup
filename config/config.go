@@ -2,8 +2,8 @@ package config
 
 import (
 	"errors"
-	"os"
 	"log"
+	"os"
 
 	"github.com/go-yaml/yaml"
 )
