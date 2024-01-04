@@ -1,26 +1,76 @@
 package config
 
 import (
-	"fmt"
+	"errors"
 	"os"
+	"log"
 
 	"github.com/go-yaml/yaml"
 )
 
 type BackupSrc = string
 type BackupDst = string
+type VaultName = string
+type AwsSharedProfile = string
+
+type BackupConfig struct {
+	Src   BackupSrc `yaml:"src"`
+	Dst   BackupDst `yaml:"dst"`
+	Keep  bool      `yaml:"keep"`
+	Vault VaultName `yaml:"vault"`
+}
+
+type AWSConfig struct {
+	Profile   string `yaml:"profile"`
+	AccountID string `yaml:"account"`
+}
 
 type Config struct {
-	Local struct {
-		Paths map[BackupSrc]BackupDst `yaml:"paths"`
-	} `yaml:"local"`
+	Backups []BackupConfig `yaml:"backup"`
+	AWS     AWSConfig      `yaml:"aws"`
 }
 
 func (c *Config) validate() error {
-	for src := range c.Local.Paths {
-		if _, err := os.Stat(src); os.IsNotExist(err) {
+	for _, backup := range c.Backups {
+		if err := backup.validate(); err != nil {
 			return err
 		}
+	}
+
+	if err := c.AWS.validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *BackupConfig) validate() error {
+	if len(c.Src) == 0 || len(c.Dst) == 0 {
+		return errors.New("Backup src and dst cannot be empty")
+	}
+
+	if _, err := os.Stat(c.Src); os.IsNotExist(err) {
+		return err
+	}
+
+	if _, err := os.Stat(c.Dst); os.IsNotExist(err) {
+		return err
+	}
+
+	if len(c.Vault) == 0 {
+		return errors.New("Vault name cannot be empty")
+	}
+
+	return nil
+}
+
+func (c *AWSConfig) validate() error {
+	if len(c.Profile) == 0 {
+		return errors.New("AWS profile cannot be empty")
+	}
+
+	if len(c.AccountID) == 0 {
+		return errors.New("AWS profile cannot be empty")
 	}
 
 	return nil
@@ -29,7 +79,7 @@ func (c *Config) validate() error {
 func NewConfig(path string) (*Config, error) {
 	fd, err := os.Open(path)
 	if err != nil {
-		fmt.Println("Error while opening config file")
+		log.Println("Cannot open config file")
 		return nil, err
 	}
 	defer fd.Close()

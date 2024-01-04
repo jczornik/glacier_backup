@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	Tar = "tar"
+	Tar       = "tar"
 	separator = " "
-	required = Tar
+	required  = Tar
 )
 
 func checkIfToolExists(prog string) error {
