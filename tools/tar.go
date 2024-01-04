@@ -1,4 +1,4 @@
-package incrbackup
+package tools
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/jczornik/glacier_backup/config"
-	"github.com/jczornik/glacier_backup/tools"
 )
 
 func CreateBackup(src config.BackupSrc, dst config.BackupDst) error {
@@ -19,7 +18,7 @@ func CreateBackup(src config.BackupSrc, dst config.BackupDst) error {
 	time := time.Now().Format("2006-01-02_15:04:05")
 	archive := fmt.Sprintf("%s/%s-%s.tar.gz", dst, srcLast, time)
 
-	if err := exec.Command(tools.Tar, "-czvg", snapshotFile, "-f", archive, src).Run(); err != nil {
+	if err := exec.Command(Tar, "-czvg", snapshotFile, "-f", archive, src).Run(); err != nil {
 		log.Println("Error while creating backup file")
 		return err
 	}

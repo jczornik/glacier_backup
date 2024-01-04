@@ -6,7 +6,6 @@ import (
 
 	"github.com/jczornik/glacier_backup/aws"
 	"github.com/jczornik/glacier_backup/config"
-	"github.com/jczornik/glacier_backup/incrbackup"
 	"github.com/jczornik/glacier_backup/tools"
 )
 
@@ -30,7 +29,7 @@ func main() {
 	}
 
 	for _, backup := range cfg.Backups {
-		if err := incrbackup.CreateBackup(backup.Src, backup.Dst); err != nil {
+		if err := tools.CreateBackup(backup.Src, backup.Dst); err != nil {
 			log.Println(err)
 			os.Exit(4)
 		}
