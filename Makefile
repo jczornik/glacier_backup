@@ -1,8 +1,11 @@
 build:
 	go build .
 
-test:
+mod-tidy:
+	go mod tidy
+
+test: mod-tidy
 	go test ./...
 
-run:
+run: mod-tidy
 	go run . $(CONFIG)
