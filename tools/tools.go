@@ -45,7 +45,7 @@ func (c CmdChain) Run() error {
 }
 
 func (c CmdChain) waitForN(idx int) error {
-	errs := make([]error, idx + 1)
+	errs := make([]error, idx+1)
 	for i := 0; i <= idx; i++ {
 		errs[i] = c.cmds[i].Wait()
 	}

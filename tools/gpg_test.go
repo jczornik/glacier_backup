@@ -1,8 +1,8 @@
 package tools
 
 import (
-	"testing"
 	"strings"
+	"testing"
 )
 
 func TestEncryptDecrypt(t *testing.T) {
@@ -20,7 +20,7 @@ func TestEncryptDecrypt(t *testing.T) {
 	dec, _ := decCmd.Output()
 
 	// Then
-	if string(dec) != str  {
+	if string(dec) != str {
 		t.Errorf("Expected '%s', but got '%s'", str, dec)
 	}
 }
