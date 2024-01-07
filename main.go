@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/jczornik/glacier_backup/aws"
+	"github.com/jczornik/glacier_backup/backup"
 	"github.com/jczornik/glacier_backup/config"
 	"github.com/jczornik/glacier_backup/tools"
 )
@@ -28,12 +28,12 @@ func main() {
 		os.Exit(3)
 	}
 
-	for _, backup := range cfg.Backups {
-		if err := tools.CreateBackup(backup.Src, backup.Dst); err != nil {
+	for _, cbackup := range cfg.Backups {
+		if err := backup.CreateEncryptedBackup(cbackup.Src, cbackup.Dst, "1234"); err != nil {
 			log.Println(err)
 			os.Exit(4)
 		}
 	}
 
-	aws.UploadData(cfg)
+	//aws.UploadData(cfg)
 }
