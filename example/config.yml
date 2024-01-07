@@ -1,0 +1,8 @@
+backup:
+    - src: "/path/to/backup/src"
+      dst: "/path/to/backup/dst"
+      keep: false
+      vault: "glacierVaultName"
+aws:
+  profile: "aws_profile_name"
+  account: "123456789"
