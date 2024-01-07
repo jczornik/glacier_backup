@@ -45,7 +45,7 @@ func main() {
 	}
 
 	if err := aws.UploadData(cfg); err != nil {
-		log.Println("Error while uploading backup")
+		log.Printf("Error while uploading backup, Err: %s\n", err)
 		os.Exit(ecUploadingBackup)
 	}
 }
