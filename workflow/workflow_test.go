@@ -5,6 +5,10 @@ import (
 	"testing"
 )
 
+// TODO: Add tests for:
+//           * rollback all actions
+//           * rollback error
+
 type execfunc = func() error
 type rollbackfunc = func() error
 
