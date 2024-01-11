@@ -8,7 +8,7 @@ type action interface {
 }
 
 type WorkflowError struct {
-	execError error
+	execError     error
 	rollbackError error
 }
 

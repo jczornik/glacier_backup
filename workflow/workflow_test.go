@@ -9,10 +9,10 @@ type execfunc = func() error
 type rollbackfunc = func() error
 
 type simpleTask struct {
-	executed bool
+	executed   bool
 	rollbacked bool
 
-	execf execfunc
+	execf     execfunc
 	rollbackf rollbackfunc
 }
 
@@ -79,7 +79,7 @@ func TestFailShouldNotCallNextTaskAndRollback(t *testing.T) {
 	flow := Workflow{[]action{task1, task2}}
 
 	// When
-	err := flow.Exec();
+	err := flow.Exec()
 
 	// Then
 	if err == nil {
