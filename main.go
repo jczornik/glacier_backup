@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/jczornik/glacier_backup/aws"
+	// "github.com/jczornik/glacier_backup/aws"
 	"github.com/jczornik/glacier_backup/backup"
 	"github.com/jczornik/glacier_backup/config"
 	"github.com/jczornik/glacier_backup/tools"
@@ -44,8 +44,8 @@ func main() {
 		}
 	}
 
-	if err := aws.UploadData(cfg); err != nil {
-		log.Printf("Error while uploading backup, Err: %s\n", err)
-		os.Exit(ecUploadingBackup)
-	}
+	// if err := aws.UploadData(cfg); err != nil {
+	// 	log.Printf("Error while uploading backup, Err: %s\n", err)
+	// 	os.Exit(ecUploadingBackup)
+	// }
 }

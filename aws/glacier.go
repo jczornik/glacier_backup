@@ -2,28 +2,27 @@ package aws
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glacier"
-	"github.com/jczornik/glacier_backup/config"
 )
 
-func UploadData(cfg *config.Config) error {
-	awscfg, err := NewConfig(cfg)
+func GetVaults(cfg aws.Config, account string) ([]string, error) {
+	client := glacier.NewFromConfig(cfg)
+	vaults, err := client.ListVaults(context.TODO(), &glacier.ListVaultsInput{AccountId: &account})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	client := glacier.NewFromConfig(awscfg)
-	vaults, err := client.ListVaults(context.TODO(), &glacier.ListVaultsInput{AccountId: &cfg.AWS.AccountID})
-	if err != nil {
-		return err
+	vaultNames := make([]string, len(vaults.VaultList))
+	for i, element := range vaults.VaultList {
+		vaultNames[i] = *element.VaultName
 	}
 
-	fmt.Println("Vaults:")
-	for _, element := range vaults.VaultList {
-		fmt.Println(*element.VaultName)
-	}
+	return vaultNames, nil
+}
 
+func UploadData(cfg aws.Config, account string) error {
+	glacier.NewFromConfig(cfg)
 	return nil
 }
