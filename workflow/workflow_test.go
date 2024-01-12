@@ -5,10 +5,6 @@ import (
 	"testing"
 )
 
-// TODO: Add tests for:
-//           * rollback all actions
-//           * rollback error
-
 type execfunc = func() error
 type rollbackfunc = func() error
 
@@ -150,5 +146,28 @@ func TestRallbackAllActions(t *testing.T) {
 
 	if !task1.rollbacked || !task2.rollbacked || !task3.rollbacked || !task4.rollbacked {
 		t.Error("All tasks should be executed")
+	}
+}
+
+func TestErrorWhileRollback(t *testing.T) {
+	// Given
+	ff := func() error {
+		return errors.New("First fail")
+	}
+
+	rollback := func() error {
+		return errors.New("Rollback error")
+	}
+
+	task1 := newSimpleTask(ff, rollback)
+
+	flow := Workflow{[]action{task1}}
+
+	// When
+	err := flow.Exec()
+
+	// Then
+	if err.execError == nil || err.rollbackError == nil {
+		t.Error("Exec and rollback errors should be set")
 	}
 }
