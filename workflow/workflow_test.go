@@ -36,8 +36,8 @@ func TestExecAll(t *testing.T) {
 		return nil
 	}
 
-	actions := []action{newSimpleTask(v, v), newSimpleTask(v, v)}
-	w := Workflow{actions}
+	tasks := []task{newSimpleTask(v, v), newSimpleTask(v, v)}
+	w := Workflow{tasks}
 
 	// When
 	err := w.Exec()
@@ -47,7 +47,7 @@ func TestExecAll(t *testing.T) {
 		t.Errorf("Workflow returned err: %s", err)
 	}
 
-	for no, task := range w.actions {
+	for no, task := range w.tasks {
 		st, ok := task.(*simpleTask)
 		if !ok {
 			t.Error("Expected task to be instance of simpleTask")
@@ -76,7 +76,7 @@ func TestFailShouldNotCallNextTaskAndRollback(t *testing.T) {
 	task1 := newSimpleTask(ff, rollback)
 	task2 := newSimpleTask(sf, rollback)
 
-	flow := Workflow{[]action{task1, task2}}
+	flow := Workflow{[]task{task1, task2}}
 
 	// When
 	err := flow.Exec()
@@ -103,7 +103,7 @@ func TestFailShouldNotCallNextTaskAndRollback(t *testing.T) {
 	}
 }
 
-func TestRallbackAllActions(t *testing.T) {
+func TestRallbackAllTasks(t *testing.T) {
 	// Given
 	ff := func() error {
 		return errors.New("First fail")
@@ -122,7 +122,7 @@ func TestRallbackAllActions(t *testing.T) {
 	task3 := newSimpleTask(f, rollback)
 	task4 := newSimpleTask(ff, rollback)
 
-	flow := Workflow{[]action{task1, task2, task3, task4}}
+	flow := Workflow{[]task{task1, task2, task3, task4}}
 
 	// When
 	err := flow.Exec()
@@ -161,7 +161,7 @@ func TestErrorWhileRollback(t *testing.T) {
 
 	task1 := newSimpleTask(ff, rollback)
 
-	flow := Workflow{[]action{task1}}
+	flow := Workflow{[]task{task1}}
 
 	// When
 	err := flow.Exec()

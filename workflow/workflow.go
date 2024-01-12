@@ -2,7 +2,7 @@ package workflow
 
 import "fmt"
 
-type action interface {
+type task interface {
 	Exec() error
 	Rollback() error
 }
@@ -17,12 +17,12 @@ func (error WorkflowError) Error() string {
 }
 
 type Workflow struct {
-	actions []action
+	tasks []task
 }
 
 func (flow Workflow) Exec() *WorkflowError {
-	for i, action := range flow.actions {
-		if execError := action.Exec(); execError != nil {
+	for i, task := range flow.tasks {
+		if execError := task.Exec(); execError != nil {
 			if rollbackError := flow.rollback(i); rollbackError != nil {
 				return &WorkflowError{execError, rollbackError}
 			}
@@ -36,7 +36,7 @@ func (flow Workflow) Exec() *WorkflowError {
 
 func (flow Workflow) rollback(idx int) error {
 	for i := idx; i >= 0; i-- {
-		if err := flow.actions[i].Rollback(); err != nil {
+		if err := flow.tasks[i].Rollback(); err != nil {
 			return err
 		}
 	}
