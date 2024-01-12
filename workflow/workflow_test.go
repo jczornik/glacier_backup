@@ -106,3 +106,49 @@ func TestFailShouldNotCallNextTaskAndRollback(t *testing.T) {
 		t.Errorf("First task should be executed and rollbacked: executed == %t, rollbacked == %t", task1.executed, task1.rollbacked)
 	}
 }
+
+func TestRallbackAllActions(t *testing.T) {
+	// Given
+	ff := func() error {
+		return errors.New("First fail")
+	}
+
+	f := func() error {
+		return nil
+	}
+
+	rollback := func() error {
+		return nil
+	}
+
+	task1 := newSimpleTask(f, rollback)
+	task2 := newSimpleTask(f, rollback)
+	task3 := newSimpleTask(f, rollback)
+	task4 := newSimpleTask(ff, rollback)
+
+	flow := Workflow{[]action{task1, task2, task3, task4}}
+
+	// When
+	err := flow.Exec()
+
+	// Then
+	if err == nil {
+		t.Error("Flow should return an error")
+	}
+
+	if err.execError == nil {
+		t.Error("Flow error should return exec error")
+	}
+
+	if err.rollbackError != nil {
+		t.Error("Flow error should not return rallback error")
+	}
+
+	if !task1.executed || !task2.executed || !task3.executed || !task4.executed {
+		t.Error("All tasks should be executed")
+	}
+
+	if !task1.rollbacked || !task2.rollbacked || !task3.rollbacked || !task4.rollbacked {
+		t.Error("All tasks should be executed")
+	}
+}
