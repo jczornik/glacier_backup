@@ -11,7 +11,7 @@ import (
 
 type Artifacts struct {
 	snapshot string
-	archive string
+	archive  string
 }
 
 func CreateEncryptedBackup(src config.BackupSrc, dst config.BackupDst, pass string) (Artifacts, error) {
