@@ -38,7 +38,7 @@ func main() {
 	}
 
 	for _, cbackup := range cfg.Backups {
-		if err := backup.CreateEncryptedBackup(cbackup.Src, cbackup.Dst, "1234"); err != nil {
+		if _, err := backup.CreateEncryptedBackup(cbackup.Src, cbackup.Dst, "1234"); err != nil {
 			log.Println(err)
 			os.Exit(ecCreatingBackup)
 		}
