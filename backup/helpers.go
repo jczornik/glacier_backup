@@ -12,6 +12,7 @@ const (
 	manifestExt = "manifest"
 	archExt     = "tar.gz"
 	encExt      = "gpg"
+	dateRegexp  = "\\d\\d\\d\\d-\\d\\d-\\d\\d_\\d\\d-\\d\\d-\\d\\d"
 )
 
 func lastPathElement(src string) string {
@@ -36,7 +37,6 @@ func NewArtifactNames(src string, dst string) Artifacts {
 
 func getManifestRegexp(src string) string {
 	last := lastPathElement(src)
-	dateRegexp := "\\d\\d\\d\\d-\\d\\d-\\d\\d_\\d\\d-\\d\\d-\\d\\d"
 	pattern := fmt.Sprintf("%s_%s.%s", last, dateRegexp, manifestExt)
 
 	return pattern
@@ -63,7 +63,8 @@ func GetManifestForSrc(src string, lookup string) (*string, error) {
 		}
 
 		if res {
-			return &name, nil
+			path := fmt.Sprintf("%s/%s", lookup, name)
+			return &path, nil
 		}
 	}
 

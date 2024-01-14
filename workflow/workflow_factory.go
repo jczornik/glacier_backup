@@ -6,19 +6,11 @@ import (
 )
 
 func NewEncryptedBackup(src string, dst string, pass string) (*Workflow, error) {
-	prevManifest, err := backup.GetManifestForSrc(src, dst)
-	if err != nil {
-		return nil, err
-	}
+	preserveManifest := tasks.NewPreserveTask(src, dst)
 
 	artifacts := backup.NewArtifactNames(src, dst)
 	encBackup := tasks.NewEncryptedBackupTask(src, artifacts, pass)
 
-	if prevManifest != nil {
-		preserveManifest := tasks.NewPreserveTask(*prevManifest)
-		return &Workflow{[]task{preserveManifest, encBackup}}, nil
-	}
-
-	return &Workflow{[]task{encBackup}}, nil
+	return &Workflow{[]task{preserveManifest, encBackup}}, nil
 
 }
