@@ -1,6 +1,9 @@
 package tasks
 
-import "os"
+import (
+	"log"
+	"os"
+)
 
 type PreserveTask struct {
 	original string
@@ -21,9 +24,27 @@ func moveManifest(src string, dst string) error {
 }
 
 func (t PreserveTask) Exec() error {
-	return moveManifest(t.original, t.copy)
+	log.Printf("Starting presering old manifest %s\n", t.original)
+	err := moveManifest(t.original, t.copy)
+
+	if err != nil {
+		log.Printf("Error while preserving manifest %s", t.original)
+	} else {
+		log.Printf("Successfully preserved manifest %s.\nSaved to %s\n", t.original, t.copy)
+	}
+
+	return err
 }
 
 func (t PreserveTask) Rollback() error {
-	return moveManifest(t.copy, t.original)
+	log.Printf("Rollback for preserve %s\n", t.original)
+	err := moveManifest(t.copy, t.original)
+
+	if err != nil {
+		log.Printf("Error while rollbacking preserve for %s\n", t.original)
+	} else {
+		log.Printf("Successfully rollbacked preserve for %s\n", t.original)
+	}
+
+	return err
 }
