@@ -34,6 +34,7 @@ func (t *PreserveTask) Exec() error {
 
 	if err != nil {
 		log.Printf("Error while searching for manifest for backup %s\n", t.backupSrc)
+		return nil
 	}
 
 	if manifest == nil {
