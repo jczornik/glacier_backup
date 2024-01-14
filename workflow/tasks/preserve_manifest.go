@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 
@@ -19,12 +20,33 @@ func NewPreserveTask(backupSrc string, backupDst string) *PreserveTask {
 	return &PreserveTask{backupSrc, backupDst, nil, nil}
 }
 
+func copyManifest(src string, dst string) error {
+	old, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer old.Close()
+
+	new, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer old.Close()
+
+	_, err = io.Copy(new, old)
+	return err
+}
+
 func moveManifest(src string, dst string) error {
 	if _, err := os.Stat(src); os.IsNotExist(err) {
 		return nil
 	}
 
 	return os.Rename(src, dst)
+}
+
+func delManifest(manifest string) error {
+	return os.Remove(manifest)
 }
 
 func (t *PreserveTask) Exec() error {
@@ -44,7 +66,7 @@ func (t *PreserveTask) Exec() error {
 
 	t.original = manifest
 	manifestDst := fmt.Sprintf("%s.old", *manifest)
-	err = moveManifest(*manifest, manifestDst)
+	err = copyManifest(*manifest, manifestDst)
 
 	if err != nil {
 		log.Printf("Error while preserving manifest %s", *manifest)
@@ -59,18 +81,23 @@ func (t *PreserveTask) Exec() error {
 func (t *PreserveTask) Rollback() error {
 	log.Printf("Rollback preserve for %s\n", t.backupSrc)
 
-	if t.original == nil || t.preserved == nil {
+	if t.preserved == nil {
 		log.Printf("There is nothing to revert for preserve task for %s\n", t.backupSrc)
 		return nil
 	}
 
-	err := moveManifest(*t.preserved, *t.original)
-
-	if err != nil {
-		log.Printf("Error while rollbacking preserve %s\n", *t.preserved)
-	} else {
-		log.Printf("Successfully rollbacked preserve %s\n", *t.preserved)
+	if t.original != nil {
+		if err := delManifest(*t.original); err != nil {
+			log.Printf("Error while removing manifest %s\n", *t.original)
+			return err
+		}
 	}
 
-	return err
+	if err := moveManifest(*t.preserved, *t.original); err != nil {
+		log.Printf("Error while restoring manifest %s\n", *t.preserved)
+		return err
+	}
+
+	log.Printf("Successfully rollbacked preserve %s\n", *t.preserved)
+	return nil
 }
