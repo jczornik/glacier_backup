@@ -1,6 +1,18 @@
 package backup
 
-import "strings"
+import (
+	"fmt"
+	"os"
+	"regexp"
+	"strings"
+	"time"
+)
+
+const (
+	manifestExt = "manifest"
+	archExt     = "tar.gz"
+	encExt      = "gpg"
+)
 
 func lastPathElement(src string) string {
 	tmp := strings.Split(src, "/")
@@ -10,4 +22,50 @@ func lastPathElement(src string) string {
 		}
 	}
 	return src
+}
+
+func NewArtifactNames(src string, dst string) Artifacts {
+	bckName := lastPathElement(src)
+	now := time.Now().Format("2006-01-02_15-04-05")
+	bckName = fmt.Sprintf("%s_%s", bckName, now)
+	snapshot := fmt.Sprintf("%s/%s.%s", dst, bckName, manifestExt)
+	encArchName := fmt.Sprintf("%s/%s.%s.%s", dst, bckName, archExt, encExt)
+
+	return Artifacts{snapshot, encArchName}
+}
+
+func getManifestRegexp(src string) string {
+	last := lastPathElement(src)
+	dateRegexp := "\\d\\d\\d\\d-\\d\\d-\\d\\d_\\d\\d-\\d\\d-\\d\\d"
+	pattern := fmt.Sprintf("%s_%s.%s", last, dateRegexp, manifestExt)
+
+	return pattern
+}
+
+func GetManifestForSrc(src string, lookup string) (*string, error) {
+	files, err := os.ReadDir(lookup)
+
+	if err != nil {
+		return nil, err
+	}
+
+	re := getManifestRegexp(src)
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		name := file.Name()
+		res, err := regexp.MatchString(re, name)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if res {
+			return &name, nil
+		}
+	}
+
+	return nil, nil
 }

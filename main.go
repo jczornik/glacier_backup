@@ -5,9 +5,9 @@ import (
 	"os"
 
 	// "github.com/jczornik/glacier_backup/aws"
-	"github.com/jczornik/glacier_backup/backup"
 	"github.com/jczornik/glacier_backup/config"
 	"github.com/jczornik/glacier_backup/tools"
+	"github.com/jczornik/glacier_backup/workflow"
 )
 
 const (
@@ -37,15 +37,21 @@ func main() {
 		os.Exit(ecReadingConf)
 	}
 
-	for _, cbackup := range cfg.Backups {
-		if _, err := backup.CreateEncryptedBackup(cbackup.Src, cbackup.Dst, "1234"); err != nil {
-			log.Println(err)
-			os.Exit(ecCreatingBackup)
+	var workflows = make([]workflow.Workflow, len(cfg.Backups))
+
+	for i, cbackup := range cfg.Backups {
+		if w, err := workflow.NewEncryptedBackup(cbackup.Src, cbackup.Dst, "1234"); err == nil {
+			workflows[i] = *w
+		} else {
+			log.Fatal(err)
 		}
 	}
 
-	// if err := aws.UploadData(cfg); err != nil {
-	// 	log.Printf("Error while uploading backup, Err: %s\n", err)
-	// 	os.Exit(ecUploadingBackup)
-	// }
+	for _, w := range workflows {
+		if err := w.Exec(); err != nil {
+			log.Fatal(err)
+		} else {
+			log.Println("Workflow OK!")
+		}
+	}
 }
