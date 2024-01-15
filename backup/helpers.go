@@ -27,10 +27,15 @@ func NewArtifactNames(src string, dst string) Artifacts {
 	last := lastPathElement(src)
 	now := time.Now().Format("2006-01-02_15-04-05")
 	bckName := fmt.Sprintf("%s_%s", last, now)
-	manifest := fmt.Sprintf("%s/%s.%s", dst, last, manifestExt)
+	manifest := MakeManifestName(src, dst)
 	encArchName := fmt.Sprintf("%s/%s.%s.%s", dst, bckName, archExt, encExt)
 
 	return Artifacts{manifest, encArchName}
+}
+
+func MakeManifestName(src string, dst string) string {
+	last := lastPathElement(src)
+	return fmt.Sprintf("%s/%s.%s", dst, last, manifestExt)
 }
 
 func GetManifestForSrc(src string, lookup string) (*string, error) {

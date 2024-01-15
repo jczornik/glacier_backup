@@ -40,11 +40,7 @@ func main() {
 	var workflows = make([]workflow.Workflow, len(cfg.Backups))
 
 	for i, cbackup := range cfg.Backups {
-		if w, err := workflow.NewEncryptedBackup(cbackup.Src, cbackup.Dst, "1234"); err == nil {
-			workflows[i] = *w
-		} else {
-			log.Fatal(err)
-		}
+		workflows[i] = workflow.NewEncryptedBackup(cbackup.Src, cbackup.Dst, "1234", cbackup.Keep)
 	}
 
 	for _, w := range workflows {

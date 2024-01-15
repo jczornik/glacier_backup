@@ -9,6 +9,8 @@ import (
 	"github.com/jczornik/glacier_backup/backup"
 )
 
+const PreservedExt = "old"
+
 type PreserveTask struct {
 	backupSrc string
 	backupDst string
@@ -65,7 +67,7 @@ func (t *PreserveTask) Exec() error {
 	}
 
 	t.original = manifest
-	manifestDst := fmt.Sprintf("%s.old", *manifest)
+	manifestDst := fmt.Sprintf("%s.%s", *manifest, PreservedExt)
 	err = copyManifest(*manifest, manifestDst)
 
 	if err != nil {
