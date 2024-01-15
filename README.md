@@ -1,3 +1,5 @@
+** WARNING: This is an alpha release - don't use it for essential files. Suggestions are welcome! **
+
 # What is this program for?
 
 The goal of this project is to provide a simple way to create an incremental backup and upload
@@ -76,3 +78,7 @@ Now, you should be able to run your backup jobs with the following:
 ```bash
 > glacier_backup /path/to/config/config.yml
 ```
+
+** Very important! **
+
+Creating a backup will result in creating a file with a `.manifest` extension. It is essential not to delete it. It is used by `tar` to create an incremental backup. If you delete it, the next backup job will create a tarball with all files from the source directory.
