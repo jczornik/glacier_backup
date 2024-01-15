@@ -1,4 +1,4 @@
-** WARNING: This is an alpha release - don't use it for essential files. Suggestions are welcome! **
+**WARNING: This is an alpha release - don't use it for essential files. Suggestions are welcome!**
 
 # What is this program for?
 
@@ -79,6 +79,6 @@ Now, you should be able to run your backup jobs with the following:
 > glacier_backup /path/to/config/config.yml
 ```
 
-** Very important! **
+**Very important!**
 
 Creating a backup will result in creating a file with a `.manifest` extension. It is essential not to delete it. It is used by `tar` to create an incremental backup. If you delete it, the next backup job will create a tarball with all files from the source directory.
