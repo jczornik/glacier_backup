@@ -2,6 +2,7 @@ package aws
 
 import (
 	"context"
+	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glacier"
@@ -22,7 +23,21 @@ func GetVaults(cfg aws.Config, account string) ([]string, error) {
 	return vaultNames, nil
 }
 
-func UploadData(cfg aws.Config, account string) error {
-	glacier.NewFromConfig(cfg)
-	return nil
+func UploadData(cfg aws.Config, account string, vault string, archive string) error {
+	file, err := os.Open(archive)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	client := glacier.NewFromConfig(cfg)
+	input := glacier.UploadArchiveInput{
+		AccountId: &account,
+		VaultName: &vault,
+		Body: file,
+	}
+
+	_, err = client.UploadArchive(context.TODO(), &input)
+
+	return err
 }

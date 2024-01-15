@@ -40,7 +40,7 @@ func main() {
 	var workflows = make([]workflow.Workflow, len(cfg.Backups))
 
 	for i, cbackup := range cfg.Backups {
-		workflows[i] = workflow.NewEncryptedBackup(cbackup.Src, cbackup.Dst, cbackup.Pass, cbackup.Keep)
+		workflows[i] = workflow.NewEncryptedBackup(cbackup.Src, cbackup.Dst, cbackup.Pass, cfg.AWS.AccountID, cbackup.Vault, cfg.AWS.Profile, cbackup.Keep)
 	}
 
 	for _, w := range workflows {
