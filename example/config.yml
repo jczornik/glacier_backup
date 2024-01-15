@@ -3,6 +3,7 @@ backup:
       dst: "/path/to/backup/dst"
       keep: false
       vault: "glacierVaultName"
+      password: "1234"
 aws:
   profile: "aws_profile_name"
   account: "123456789"

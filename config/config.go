@@ -18,6 +18,7 @@ type BackupConfig struct {
 	Dst   BackupDst `yaml:"dst"`
 	Keep  bool      `yaml:"keep"`
 	Vault VaultName `yaml:"vault"`
+	Pass  string    `yaml:"password"`
 }
 
 type AWSConfig struct {
