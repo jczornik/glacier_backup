@@ -21,8 +21,8 @@ This program requires the following programs to run:
 If you are using `GNU/Linux` distribution with `apt` package manager, you can (probably) install both using:
 
 ```bash
-> apt install tar
-> apt install gnupg
+> sudo apt install tar
+> sudo apt install gnupg
 ```
 
 # Configuration
@@ -67,12 +67,12 @@ There are only two settings: profile and account. The `profile` specifies the pr
 First, download the latest release. I suggest adding it to `/usr/bin` so it will be available without providing the absolute path:
 
 ```bash
-sudo cp /path/to/downloaded/binary/glacier_backup /usr/bin
-sudo chmod +x /usr/bin/glacier_backup
+> sudo cp /path/to/downloaded/binary/glacier_backup /usr/bin
+> sudo chmod +x /usr/bin/glacier_backup
 ```
 
 Now, you should be able to run your backup jobs with the following:
 
 ```bash
-glacier_backup /path/to/config/config.yml
+> glacier_backup /path/to/config/config.yml
 ```
