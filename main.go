@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	// "github.com/jczornik/glacier_backup/aws"
 	"github.com/jczornik/glacier_backup/config"
+	"github.com/jczornik/glacier_backup/persistent"
 	"github.com/jczornik/glacier_backup/tools"
 	"github.com/jczornik/glacier_backup/workflow"
 )
@@ -35,6 +35,11 @@ func main() {
 	if err != nil {
 		log.Printf("Cannot read configuration. Err: %s\n", err)
 		os.Exit(ecReadingConf)
+	}
+
+	db := persistent.NewDBClient(cfg.Db)
+	if err := persistent.CheckAndUpdateSchema(db); err != nil {
+		log.Println(err)
 	}
 
 	var workflows = make([]workflow.Workflow, len(cfg.Backups))
