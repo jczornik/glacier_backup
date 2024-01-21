@@ -9,7 +9,10 @@ import (
 	"github.com/jczornik/glacier_backup/backup"
 )
 
-const PreservedExt = "old"
+const (
+	PreservedExt = "old"
+	preserveName = "PreserveManifest"
+)
 
 type PreserveTask struct {
 	backupSrc string
@@ -102,4 +105,8 @@ func (t *PreserveTask) Rollback() error {
 
 	log.Printf("Successfully rollbacked preserve %s\n", *t.preserved)
 	return nil
+}
+
+func (t *PreserveTask) Name() string {
+	return preserveName
 }

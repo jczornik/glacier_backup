@@ -7,6 +7,8 @@ import (
 	"github.com/jczornik/glacier_backup/backup"
 )
 
+const encBackupName = "EncryptedBackup"
+
 type EncryptedBackupTask struct {
 	src       string
 	pass      string
@@ -43,4 +45,8 @@ func (t EncryptedBackupTask) Rollback() error {
 	}
 
 	return nil
+}
+
+func (t EncryptedBackupTask) Name() string {
+	return encBackupName
 }

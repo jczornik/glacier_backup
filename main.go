@@ -16,6 +16,7 @@ const (
 	ecReadingConf
 	ecCreatingBackup
 	ecUploadingBackup
+	ecCreatingWorkflow
 )
 
 func main() {
@@ -45,7 +46,11 @@ func main() {
 	var workflows = make([]workflow.Workflow, len(cfg.Backups))
 
 	for i, cbackup := range cfg.Backups {
-		workflows[i] = workflow.NewEncryptedBackup(cbackup.Src, cbackup.Dst, cbackup.Pass, cfg.AWS.AccountID, cbackup.Vault, cfg.AWS.Profile, cbackup.Keep)
+		workflows[i], err = workflow.NewEncryptedBackup(cbackup.Src, cbackup.Dst, cbackup.Pass, cfg.AWS.AccountID, cbackup.Vault, cfg.AWS.Profile, cbackup.Keep, db)
+		if err != nil {
+			log.Println(err)
+			os.Exit(ecCreatingWorkflow)
+		}
 	}
 
 	for _, w := range workflows {

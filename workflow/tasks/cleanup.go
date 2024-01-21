@@ -8,6 +8,8 @@ import (
 	"github.com/jczornik/glacier_backup/backup"
 )
 
+const cleanupName = "Cleanup"
+
 type CleanupTask struct {
 	bckSrc           string
 	bckDst           string
@@ -73,4 +75,8 @@ func (t CleanupTask) Rollback() error {
 
 	log.Printf("Successfully rolbacked cleanup for %s\n", t.artifacts.Archive)
 	return nil
+}
+
+func (t CleanupTask) Name() string {
+	return cleanupName
 }

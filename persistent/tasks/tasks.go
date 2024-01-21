@@ -33,7 +33,7 @@ func CreateTable(db *sql.Tx) error {
 	return err
 }
 
-func Create(tx *sql.Tx, workflow int, name string) (int64, error) {
+func Create(tx *sql.Tx, workflow int64, name string) (int64, error) {
 	row, err := tx.Exec("INSERT INTO jobs (workflow, name, status) VALUES (?, ?, ?)", workflow, name, PendingStatus)
 	if err != nil {
 		log.Println("Error while creating job")
@@ -45,7 +45,7 @@ func Create(tx *sql.Tx, workflow int, name string) (int64, error) {
 	return jobid, err
 }
 
-func UpdateStatus(db *sql.DB, id int, status string) error {
+func UpdateStatus(db *sql.DB, id int64, status string) error {
 	_, err := db.Exec("UPDATE jobs SET status = ? WHERE id = ?", status, id)
 	if err != nil {
 		log.Printf("Error while updating status for job %d\n", id)
