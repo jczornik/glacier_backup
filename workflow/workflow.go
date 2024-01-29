@@ -1,10 +1,15 @@
 package workflow
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/jczornik/glacier_backup/persistent"
+)
 
 type task interface {
 	Exec() error
 	Rollback() error
+	Name() string
 }
 
 type WorkflowError struct {
@@ -13,14 +18,22 @@ type WorkflowError struct {
 }
 
 func (error WorkflowError) Error() string {
-	return fmt.Sprintf("Exec error: %s\nRollback error %s", error.execError, error.rollbackError)
+	return fmt.Sprintf("Exec error: %s\nRollback error %s\n", error.execError, error.rollbackError)
 }
 
-type Workflow struct {
+type Workflow interface {
+	Exec() *WorkflowError
+}
+
+type BasicWorkflow struct {
 	tasks []task
 }
 
-func (flow Workflow) Exec() *WorkflowError {
+func newBasicWorkflow(tasks []task, client persistent.DBClient) Workflow {
+	return BasicWorkflow{tasks}
+}
+
+func (flow BasicWorkflow) Exec() *WorkflowError {
 	for i, task := range flow.tasks {
 		if execError := task.Exec(); execError != nil {
 			if rollbackError := flow.rollback(i); rollbackError != nil {
@@ -34,7 +47,7 @@ func (flow Workflow) Exec() *WorkflowError {
 	return nil
 }
 
-func (flow Workflow) rollback(idx int) error {
+func (flow BasicWorkflow) rollback(idx int) error {
 	for i := idx; i >= 0; i-- {
 		if err := flow.tasks[i].Rollback(); err != nil {
 			return err

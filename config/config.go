@@ -26,9 +26,14 @@ type AWSConfig struct {
 	AccountID string `yaml:"account"`
 }
 
+type DB struct {
+	Path string `yaml:"path"`
+}
+
 type Config struct {
 	Backups []BackupConfig `yaml:"backup"`
 	AWS     AWSConfig      `yaml:"aws"`
+	Db      DB             `yaml:"db"`
 }
 
 func (c *Config) validate() error {

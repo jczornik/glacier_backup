@@ -34,7 +34,7 @@ func UploadData(cfg aws.Config, account string, vault string, archive string) er
 	input := glacier.UploadArchiveInput{
 		AccountId: &account,
 		VaultName: &vault,
-		Body: file,
+		Body:      file,
 	}
 
 	_, err = client.UploadArchive(context.TODO(), &input)

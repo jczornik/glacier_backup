@@ -9,7 +9,10 @@ import (
 	"github.com/jczornik/glacier_backup/backup"
 )
 
-const PreservedExt = "old"
+const (
+	PreservedExt = "old"
+	preserveName = "PreserveManifest"
+)
 
 type PreserveTask struct {
 	backupSrc string
@@ -33,7 +36,7 @@ func copyManifest(src string, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer old.Close()
+	defer new.Close()
 
 	_, err = io.Copy(new, old)
 	return err
@@ -48,6 +51,11 @@ func moveManifest(src string, dst string) error {
 }
 
 func delManifest(manifest string) error {
+	if _, err := os.Stat(manifest); os.IsNotExist(err) {
+		log.Printf("Manifest %s does not exist - nothing to delete\n", manifest)
+		return nil
+	}
+
 	return os.Remove(manifest)
 }
 
@@ -102,4 +110,8 @@ func (t *PreserveTask) Rollback() error {
 
 	log.Printf("Successfully rollbacked preserve %s\n", *t.preserved)
 	return nil
+}
+
+func (t *PreserveTask) Name() string {
+	return preserveName
 }

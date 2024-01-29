@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	// "github.com/jczornik/glacier_backup/aws"
 	"github.com/jczornik/glacier_backup/config"
+	"github.com/jczornik/glacier_backup/persistent"
 	"github.com/jczornik/glacier_backup/tools"
 	"github.com/jczornik/glacier_backup/workflow"
 )
@@ -16,6 +16,7 @@ const (
 	ecReadingConf
 	ecCreatingBackup
 	ecUploadingBackup
+	ecCreatingWorkflow
 )
 
 func main() {
@@ -37,10 +38,19 @@ func main() {
 		os.Exit(ecReadingConf)
 	}
 
+	db := persistent.NewDBClient(cfg.Db)
+	if err := persistent.CheckAndUpdateSchema(db); err != nil {
+		log.Println(err)
+	}
+
 	var workflows = make([]workflow.Workflow, len(cfg.Backups))
 
 	for i, cbackup := range cfg.Backups {
-		workflows[i] = workflow.NewEncryptedBackup(cbackup.Src, cbackup.Dst, cbackup.Pass, cfg.AWS.AccountID, cbackup.Vault, cfg.AWS.Profile, cbackup.Keep)
+		workflows[i], err = workflow.NewEncryptedBackup(cbackup.Src, cbackup.Dst, cbackup.Pass, cfg.AWS.AccountID, cbackup.Vault, cfg.AWS.Profile, cbackup.Keep, db)
+		if err != nil {
+			log.Println(err)
+			os.Exit(ecCreatingWorkflow)
+		}
 	}
 
 	for _, w := range workflows {

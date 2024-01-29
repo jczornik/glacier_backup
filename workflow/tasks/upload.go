@@ -9,6 +9,8 @@ import (
 	"github.com/jczornik/glacier_backup/aws"
 )
 
+const uploadName = "UploadToGlacier"
+
 type UploadToGlacierTask struct {
 	archive string
 	account string
@@ -47,4 +49,8 @@ func (t UploadToGlacierTask) Exec() error {
 
 func (t UploadToGlacierTask) Rollback() error {
 	return nil
+}
+
+func (t UploadToGlacierTask) Name() string {
+	return uploadName
 }
