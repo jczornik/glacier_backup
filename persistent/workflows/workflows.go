@@ -9,6 +9,7 @@ const createTableQuery = `
     CREATE TABLE workflows
     (
         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	name TEXT NOT NULL,
         created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         status TEXT NOT NULL
     )`
@@ -29,8 +30,8 @@ func CreateTable(db *sql.Tx) error {
 	return err
 }
 
-func Create(tx *sql.Tx) (int64, error) {
-	row, err := tx.Exec("INSERT INTO workflows (status) VALUES (?)", PendingStatus)
+func Create(tx *sql.Tx, name string) (int64, error) {
+	row, err := tx.Exec("INSERT INTO workflows (name, status) VALUES (?, ?)", name, PendingStatus)
 	if err != nil {
 		log.Println("Error while creating workflow")
 	}
@@ -47,4 +48,15 @@ func UpdateStatus(db *sql.DB, workflow int64, status string) error {
 		log.Printf("Error while updating status for workflow %d\n", workflow)
 	}
 	return err
+}
+
+func GetLastStatus(db *sql.DB, name string) (string, error) {
+	var status string
+
+	row := db.QueryRow("SELECT status FROM workflows WHERE name = ? ORDER BY id DESC LIMIT 1", name)
+	if err := row.Scan(&status); err != nil {
+		return status, err
+	}
+
+	return status, nil
 }

@@ -1,6 +1,8 @@
 package workflow
 
 import (
+	"fmt"
+
 	"github.com/jczornik/glacier_backup/backup"
 	"github.com/jczornik/glacier_backup/persistent"
 	"github.com/jczornik/glacier_backup/workflow/tasks"
@@ -15,5 +17,6 @@ func NewEncryptedBackup(src string, dst string, pass string, accountId string, v
 
 	tasks := []task{preserveManifest, encBackup, upload, cleanup}
 
-	return NewPWorkflow(tasks, client)
+	name := fmt.Sprintf("Backup for %s", src)
+	return NewPWorkflow(name, tasks, client)
 }
