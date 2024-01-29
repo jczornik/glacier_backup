@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/jczornik/glacier_backup/persistent"
-	"github.com/jczornik/glacier_backup/persistent/workflows"
 )
 
 type task interface {
@@ -19,57 +18,24 @@ type WorkflowError struct {
 }
 
 func (error WorkflowError) Error() string {
-	return fmt.Sprintf("Exec error: %s\nRollback error %s", error.execError, error.rollbackError)
+	return fmt.Sprintf("Exec error: %s\nRollback error %s\n", error.execError, error.rollbackError)
 }
 
-type Workflow struct {
-	tasks []ptask
-	db    persistent.DBClient
+type Workflow interface {
+	Exec() *WorkflowError
 }
 
-func NewWorkflow(tasks []task, client persistent.DBClient) (Workflow, error) {
-	db, err := client.OpenDB()
-	if err != nil {
-		return Workflow{}, err
-	}
-	defer db.Close()
-
-	tx, err := db.Begin()
-	if err != nil {
-		return Workflow{}, err
-	}
-
-	id, err := workflows.Create(tx)
-	if err != nil {
-		terr := tx.Rollback()
-		if terr != nil {
-			return Workflow{}, terr
-		}
-		return Workflow{}, err
-	}
-
-	ptasks := make([]ptask, len(tasks))
-	for i, t := range tasks {
-		pt, err := newPTask(client, t, id, tx)
-		if err != nil {
-			if err := tx.Rollback(); err != nil {
-				return Workflow{}, err
-			}
-			return Workflow{}, err
-		}
-
-		ptasks[i] = pt
-	}
-
-	workflow := Workflow{ptasks, client}
-	err = tx.Commit()
-
-	return workflow, err
+type BasicWorkflow struct {
+	tasks []task
 }
 
-func (flow Workflow) Exec() *WorkflowError {
+func newBasicWorkflow(tasks []task, client persistent.DBClient) Workflow {
+	return BasicWorkflow{tasks}
+}
+
+func (flow BasicWorkflow) Exec() *WorkflowError {
 	for i, task := range flow.tasks {
-		if execError := task.exec(); execError != nil {
+		if execError := task.Exec(); execError != nil {
 			if rollbackError := flow.rollback(i); rollbackError != nil {
 				return &WorkflowError{execError, rollbackError}
 			}
@@ -81,9 +47,9 @@ func (flow Workflow) Exec() *WorkflowError {
 	return nil
 }
 
-func (flow Workflow) rollback(idx int) error {
+func (flow BasicWorkflow) rollback(idx int) error {
 	for i := idx; i >= 0; i-- {
-		if err := flow.tasks[i].rollback(); err != nil {
+		if err := flow.tasks[i].Rollback(); err != nil {
 			return err
 		}
 	}

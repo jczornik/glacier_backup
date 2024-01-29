@@ -15,5 +15,5 @@ func NewEncryptedBackup(src string, dst string, pass string, accountId string, v
 
 	tasks := []task{preserveManifest, encBackup, upload, cleanup}
 
-	return NewWorkflow(tasks, client)
+	return NewPWorkflow(tasks, client)
 }

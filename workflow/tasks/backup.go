@@ -34,12 +34,12 @@ func (t EncryptedBackupTask) Exec() error {
 
 func (t EncryptedBackupTask) Rollback() error {
 	log.Printf("Rollback for creating backup for %s\n", t.src)
-	if err := os.Remove(t.artifacts.Snapshot); !os.IsNotExist(err) {
+	if err := os.Remove(t.artifacts.Snapshot); err != nil && !os.IsNotExist(err) {
 		log.Printf("Error while removing snapshot %s\n", t.artifacts.Snapshot)
 		return err
 	}
 
-	if err := os.Remove(t.artifacts.Archive); !os.IsNotExist(err) {
+	if err := os.Remove(t.artifacts.Archive); err != nil && !os.IsNotExist(err) {
 		log.Printf("Error while removing archive %s\n", t.artifacts.Archive)
 		return err
 	}

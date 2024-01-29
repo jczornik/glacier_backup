@@ -22,7 +22,11 @@ func newPTask(c persistent.DBClient, task task, workflow int64, tx *sql.Tx) (pta
 	return ptask{id, c, task}, nil
 }
 
-func (pt ptask) exec() error {
+func (pt ptask) Name() string {
+	return pt.task.Name()
+}
+
+func (pt ptask) Exec() error {
 	db, err := pt.db.OpenDB()
 	if err != nil {
 		return err
@@ -51,7 +55,7 @@ func (pt ptask) exec() error {
 	return res
 }
 
-func (pt ptask) rollback() error {
+func (pt ptask) Rollback() error {
 	db, err := pt.db.OpenDB()
 	if err != nil {
 		return err

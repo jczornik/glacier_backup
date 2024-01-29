@@ -17,8 +17,6 @@ const (
 	PendingStatus        = "pending"
 	RunningStatus        = "running"
 	FinishedStatus       = "finished"
-	FailedStatus         = "failed"
-	RollbackStatus       = "rollback"
 	RollbackedStatus     = "rollbacked"
 	FailedRollbackStatus = "failed_rollback"
 )
@@ -43,7 +41,7 @@ func Create(tx *sql.Tx) (int64, error) {
 	return workflowid, err
 }
 
-func UpdateStatus(db *sql.DB, workflow int, status string) error {
+func UpdateStatus(db *sql.DB, workflow int64, status string) error {
 	_, err := db.Exec("UPDATE workflows SET status = ? WHERE id = ?", status, workflow)
 	if err != nil {
 		log.Printf("Error while updating status for workflow %d\n", workflow)

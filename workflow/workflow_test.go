@@ -26,6 +26,10 @@ func (t *simpleTask) Rollback() error {
 	return t.rollbackf()
 }
 
+func (t *simpleTask) Name() string {
+	return "SimpleTask"
+}
+
 func newSimpleTask(e execfunc, r rollbackfunc) *simpleTask {
 	return &simpleTask{false, false, e, r}
 }
@@ -37,7 +41,7 @@ func TestExecAll(t *testing.T) {
 	}
 
 	tasks := []task{newSimpleTask(v, v), newSimpleTask(v, v)}
-	w := Workflow{tasks}
+	w := BasicWorkflow{tasks}
 
 	// When
 	err := w.Exec()
@@ -76,7 +80,7 @@ func TestFailShouldNotCallNextTaskAndRollback(t *testing.T) {
 	task1 := newSimpleTask(ff, rollback)
 	task2 := newSimpleTask(sf, rollback)
 
-	flow := Workflow{[]task{task1, task2}}
+	flow := BasicWorkflow{[]task{task1, task2}}
 
 	// When
 	err := flow.Exec()
@@ -122,7 +126,7 @@ func TestRallbackAllTasks(t *testing.T) {
 	task3 := newSimpleTask(f, rollback)
 	task4 := newSimpleTask(ff, rollback)
 
-	flow := Workflow{[]task{task1, task2, task3, task4}}
+	flow := BasicWorkflow{[]task{task1, task2, task3, task4}}
 
 	// When
 	err := flow.Exec()
@@ -161,7 +165,7 @@ func TestErrorWhileRollback(t *testing.T) {
 
 	task1 := newSimpleTask(ff, rollback)
 
-	flow := Workflow{[]task{task1}}
+	flow := BasicWorkflow{[]task{task1}}
 
 	// When
 	err := flow.Exec()
