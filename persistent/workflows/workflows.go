@@ -50,11 +50,11 @@ func UpdateStatus(db *sql.DB, workflow int64, status string) error {
 	return err
 }
 
-func GetLastStatus(db *sql.DB, name string) (string, error) {
-	var status string
+func GetLastStatus(db *sql.DB, name string) (*string, error) {
+	var status *string
 
 	row := db.QueryRow("SELECT status FROM workflows WHERE name = ? ORDER BY id DESC LIMIT 1", name)
-	if err := row.Scan(&status); err != nil {
+	if err := row.Scan(&status); err != sql.ErrNoRows && err != nil {
 		return status, err
 	}
 

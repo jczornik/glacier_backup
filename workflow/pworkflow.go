@@ -16,14 +16,17 @@ type PWorkflow struct {
 	db       persistent.DBClient
 }
 
-func checkIfLastFailed(db *sql.DB, name string) (bool, error) {
+func checkIfCanCreate(db *sql.DB, name string) (bool, error) {
 	status, err := workflows.GetLastStatus(db, name)
 	if err != nil {
 		return true, err
 	}
 
-	log.Printf("Last status for %s is %s\n", name, status)
-	return (status == workflows.FailedRollbackStatus), nil
+	if status == nil {
+		return false, nil
+	}
+
+	return (*status == workflows.FinishedStatus || *status == workflows.RollbackedStatus), nil
 }
 
 func NewPWorkflow(name string, tasks []task, client persistent.DBClient) (PWorkflow, error) {
@@ -33,12 +36,12 @@ func NewPWorkflow(name string, tasks []task, client persistent.DBClient) (PWorkf
 	}
 	defer db.Close()
 
-	lastFailed, err := checkIfLastFailed(db, name)
+	canCreate, err := checkIfCanCreate(db, name)
 	if err != nil {
 		return PWorkflow{}, err
 	}
 
-	if lastFailed == true {
+	if canCreate == false {
 		return PWorkflow{}, errors.New(fmt.Sprintf("Cannot create new workflow %s. Last workflow failed to rollback", name))
 	}
 
