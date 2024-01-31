@@ -67,6 +67,14 @@ func (c CmdChain) SetStdout(out io.Writer) error {
 	return nil
 }
 
+func (c CmdChain) SetStderr(out io.Writer) error {
+	if len(c.cmds) == 0 {
+		return errors.New("Cannot set output for empty chain")
+	}
+	c.cmds[len(c.cmds)-1].Stderr = out
+	return nil
+}
+
 func Pipe(cmd1 *exec.Cmd, cmd2 *exec.Cmd) (CmdChain, error) {
 	var chain CmdChain
 	var err error

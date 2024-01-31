@@ -1,7 +1,9 @@
 package backup
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/jczornik/glacier_backup/config"
 	"github.com/jczornik/glacier_backup/tools"
@@ -10,6 +12,15 @@ import (
 type Artifacts struct {
 	Snapshot string
 	Archive  string
+}
+
+type EncryptedBackupError struct {
+	err    string
+	stderr strings.Builder
+}
+
+func (e EncryptedBackupError) Error() string {
+	return fmt.Sprintf("Error while creating encrypted backup: %s. Stderr: %s\n", e.err, e.stderr.String())
 }
 
 func CreateEncryptedBackup(src config.BackupSrc, artifacst Artifacts, pass string) error {
@@ -31,5 +42,15 @@ func CreateEncryptedBackup(src config.BackupSrc, artifacst Artifacts, pass strin
 		return err
 	}
 
-	return full.Run()
+	backupErr := EncryptedBackupError{err: "", stderr: strings.Builder{}}
+	if err := full.SetStderr(&backupErr.stderr); err != nil {
+		return err
+	}
+
+	if err := full.Run(); err != nil {
+		backupErr.err = err.Error()
+		return backupErr
+	}
+
+	return nil
 }
