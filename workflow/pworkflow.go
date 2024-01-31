@@ -23,7 +23,7 @@ func checkIfCanCreate(db *sql.DB, name string) (bool, error) {
 	}
 
 	if status == nil {
-		return false, nil
+		return true, nil
 	}
 
 	return (*status == workflows.FinishedStatus || *status == workflows.RollbackedStatus), nil
