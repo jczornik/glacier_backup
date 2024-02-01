@@ -8,10 +8,10 @@ import (
 	"github.com/jczornik/glacier_backup/workflow/tasks"
 )
 
-func NewEncryptedBackup(src string, dst string, pass string, accountId string, vault string, profile string, rmLocalCopy bool, client persistent.DBClient) (Workflow, error) {
+func NewEncryptedBackup(src string, dst string, pass string, accountId string, vault string, profile string, rmLocalCopy bool, client persistent.DBClient, ignoreFileChanged bool) (Workflow, error) {
 	preserveManifest := tasks.NewPreserveTask(src, dst)
 	artifacts := backup.NewArtifactNames(src, dst)
-	encBackup := tasks.NewEncryptedBackupTask(src, artifacts, pass)
+	encBackup := tasks.NewEncryptedBackupTask(src, artifacts, pass, ignoreFileChanged)
 	upload := tasks.NewUploadToGlacierTask(artifacts.Archive, accountId, vault, profile)
 	cleanup := tasks.NewCleanupTask(src, dst, artifacts, rmLocalCopy)
 
