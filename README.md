@@ -40,7 +40,7 @@ An example backup configuration:
 backup:
     - src: "/path/to/backup/src"
       dst: "/path/to/backup/dst"
-	  canChange: true
+      canChange: true
       keep: false
       vault: "glacierVaultName"
       password: "1234"
