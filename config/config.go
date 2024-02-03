@@ -14,11 +14,12 @@ type VaultName = string
 type AwsSharedProfile = string
 
 type BackupConfig struct {
-	Src   BackupSrc `yaml:"src"`
-	Dst   BackupDst `yaml:"dst"`
-	Keep  bool      `yaml:"keep"`
-	Vault VaultName `yaml:"vault"`
-	Pass  string    `yaml:"password"`
+	Src       BackupSrc `yaml:"src"`
+	Dst       BackupDst `yaml:"dst"`
+	CanChange bool      `yaml:"canChange,default=false"`
+	Keep      bool      `yaml:"keep"`
+	Vault     VaultName `yaml:"vault"`
+	Pass      string    `yaml:"password"`
 }
 
 type AWSConfig struct {

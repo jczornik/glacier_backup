@@ -40,6 +40,7 @@ An example backup configuration:
 backup:
     - src: "/path/to/backup/src"
       dst: "/path/to/backup/dst"
+	  canChange: true
       keep: false
       vault: "glacierVaultName"
       password: "1234"
@@ -48,6 +49,7 @@ backup:
 The backup section is responsible for holding all backup configurations. Every entry consists of the following elements:
 * src - source directory or file you wish to create a backup for,
 * dst - destination path (must exist) where the temporary backup archive will be stored before uploading it to remote storage,
+* canChange - specifies if files in the source directory can change while creating a backup - if set to false (default value), the backup will fail if any file changes,
 * keep - specifies if you wish to keep the local copy of the backup
 * vault - the name of AWS Glacier Vault
 * password - password used for backup encryption
