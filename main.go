@@ -46,7 +46,7 @@ func main() {
 	var workflows = make([]workflow.Workflow, len(cfg.Backups))
 
 	for i, cbackup := range cfg.Backups {
-		workflows[i], err = workflow.NewEncryptedBackup(cbackup.Src, cbackup.Dst, cbackup.Pass, cfg.AWS.AccountID, cbackup.Vault, cfg.AWS.Profile, cbackup.Keep, db)
+		workflows[i], err = workflow.NewEncryptedBackup(cbackup, cfg.AWS, db)
 		if err != nil {
 			log.Println(err)
 			os.Exit(ecCreatingWorkflow)

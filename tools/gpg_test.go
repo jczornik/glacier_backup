@@ -13,11 +13,11 @@ func TestEncryptDecrypt(t *testing.T) {
 	decCmd := NewDecrypt(pass)
 
 	// When
-	encCmd.Stdin = strings.NewReader(str)
-	enc, _ := encCmd.Output()
+	encCmd.cmd.Stdin = strings.NewReader(str)
+	enc, _ := encCmd.cmd.Output()
 
-	decCmd.Stdin = strings.NewReader(string(enc))
-	dec, _ := decCmd.Output()
+	decCmd.cmd.Stdin = strings.NewReader(string(enc))
+	dec, _ := decCmd.cmd.Output()
 
 	// Then
 	if string(dec) != str {

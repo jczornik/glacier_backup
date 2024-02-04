@@ -9,10 +9,10 @@ import (
 func TestPipe(t *testing.T) {
 	// Given
 	expected := "Hello!"
-	cmd1 := exec.Command("echo", "-n", expected)
-	cmd2 := exec.Command("cat")
+	cmd1 := Cmd{exec.Command("echo", "-n", expected), nil}
+	cmd2 := Cmd{exec.Command("cat"), nil}
 	out := new(strings.Builder)
-	cmd2.Stdout = out
+	cmd2.cmd.Stdout = out
 
 	// When
 	chain, _ := Pipe(cmd1, cmd2)
@@ -27,8 +27,8 @@ func TestPipe(t *testing.T) {
 func TestPipeFirstNotExisting(t *testing.T) {
 	// Given
 	expected := "Hello!"
-	cmd1 := exec.Command("nonExistingCmd", expected)
-	cmd2 := exec.Command("cat")
+	cmd1 := Cmd{exec.Command("nonExistingCmd", expected), nil}
+	cmd2 := Cmd{exec.Command("cat"), nil}
 
 	// When
 	chain, _ := Pipe(cmd1, cmd2)
@@ -43,8 +43,8 @@ func TestPipeFirstNotExisting(t *testing.T) {
 func TestPipeAndRedirectOut(t *testing.T) {
 	// Given
 	expected := "Hello!"
-	cmd1 := exec.Command("echo", "-n", expected)
-	cmd2 := exec.Command("cat")
+	cmd1 := Cmd{exec.Command("echo", "-n", expected), nil}
+	cmd2 := Cmd{exec.Command("cat"), nil}
 	out := new(strings.Builder)
 
 	// When

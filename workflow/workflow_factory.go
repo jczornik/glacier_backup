@@ -4,19 +4,20 @@ import (
 	"fmt"
 
 	"github.com/jczornik/glacier_backup/backup"
+	"github.com/jczornik/glacier_backup/config"
 	"github.com/jczornik/glacier_backup/persistent"
 	"github.com/jczornik/glacier_backup/workflow/tasks"
 )
 
-func NewEncryptedBackup(src string, dst string, pass string, accountId string, vault string, profile string, rmLocalCopy bool, client persistent.DBClient) (Workflow, error) {
-	preserveManifest := tasks.NewPreserveTask(src, dst)
-	artifacts := backup.NewArtifactNames(src, dst)
-	encBackup := tasks.NewEncryptedBackupTask(src, artifacts, pass)
-	upload := tasks.NewUploadToGlacierTask(artifacts.Archive, accountId, vault, profile)
-	cleanup := tasks.NewCleanupTask(src, dst, artifacts, rmLocalCopy)
+func NewEncryptedBackup(conf config.BackupConfig, awsConf config.AWSConfig, db persistent.DBClient) (Workflow, error) {
+	preserveManifest := tasks.NewPreserveTask(conf.Src, conf.Dst)
+	artifacts := backup.NewArtifactNames(conf.Src, conf.Dst)
+	encBackup := tasks.NewEncryptedBackupTask(conf.Src, artifacts, conf.Pass, conf.CanChange)
+	upload := tasks.NewUploadToGlacierTask(artifacts.Archive, awsConf.AccountID, conf.Vault, awsConf.Profile)
+	cleanup := tasks.NewCleanupTask(conf.Src, conf.Dst, artifacts, conf.Keep)
 
 	tasks := []task{preserveManifest, encBackup, upload, cleanup}
 
-	name := fmt.Sprintf("Backup for %s", src)
-	return NewPWorkflow(name, tasks, client)
+	name := fmt.Sprintf("Backup for %s", conf.Src)
+	return NewPWorkflow(name, tasks, db)
 }

@@ -23,8 +23,8 @@ func (e EncryptedBackupError) Error() string {
 	return fmt.Sprintf("Error while creating encrypted backup: %s. Stderr: %s\n", e.err, e.stderr.String())
 }
 
-func CreateEncryptedBackup(src config.BackupSrc, artifacst Artifacts, pass string) error {
-	bckCmd := tools.NewBackupCmd(src, artifacst.Snapshot)
+func CreateEncryptedBackup(src config.BackupSrc, artifacst Artifacts, pass string, ignoreFileChanged bool) error {
+	bckCmd := tools.NewBackupCmd(src, artifacst.Snapshot, ignoreFileChanged)
 	encCmd := tools.NewEncryptArmoredStdOutCmd(pass)
 
 	full, err := tools.Pipe(bckCmd, encCmd)

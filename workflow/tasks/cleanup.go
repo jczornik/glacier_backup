@@ -17,8 +17,8 @@ type CleanupTask struct {
 	keepLocalArchive bool
 }
 
-func NewCleanupTask(bckSrc string, bckDst string, artifacts backup.Artifacts, rmLocalArchive bool) CleanupTask {
-	return CleanupTask{bckSrc, bckDst, artifacts, rmLocalArchive}
+func NewCleanupTask(bckSrc string, bckDst string, artifacts backup.Artifacts, keepLocal bool) CleanupTask {
+	return CleanupTask{bckSrc, bckDst, artifacts, keepLocal}
 }
 
 func (t CleanupTask) cleanupLocalArchive() error {

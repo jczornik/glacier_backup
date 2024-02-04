@@ -10,18 +10,19 @@ import (
 const encBackupName = "EncryptedBackup"
 
 type EncryptedBackupTask struct {
-	src       string
-	pass      string
-	artifacts backup.Artifacts
+	src              string
+	pass             string
+	artifacts        backup.Artifacts
+	ignoreFileChange bool
 }
 
-func NewEncryptedBackupTask(src string, artifacts backup.Artifacts, pass string) EncryptedBackupTask {
-	return EncryptedBackupTask{src, pass, artifacts}
+func NewEncryptedBackupTask(src string, artifacts backup.Artifacts, pass string, ignoreFileChange bool) EncryptedBackupTask {
+	return EncryptedBackupTask{src, pass, artifacts, ignoreFileChange}
 }
 
 func (t EncryptedBackupTask) Exec() error {
 	log.Printf("Starting encrypted backup for %s\n", t.src)
-	err := backup.CreateEncryptedBackup(t.src, t.artifacts, t.pass)
+	err := backup.CreateEncryptedBackup(t.src, t.artifacts, t.pass, t.ignoreFileChange)
 
 	if err != nil {
 		log.Printf("Error while creating encrypted backup for %s.\n", t.src)
