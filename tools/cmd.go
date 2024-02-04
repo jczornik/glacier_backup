@@ -20,15 +20,12 @@ func (c Cmd) Start() error {
 }
 
 func (c Cmd) Wait() error {
-	if err := c.cmd.Wait(); err != nil {
-		if c.isSuccessExitCode(err) {
-			return nil
-		} else {
-			return err
-		}
+	err := c.cmd.Wait()
+	if c.isSuccessExitCode(err) {
+		return nil
+	} else {
+		return err
 	}
-
-	return nil
 }
 
 func (c Cmd) isSuccessExitCode(err error) bool {
