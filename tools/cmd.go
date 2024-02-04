@@ -32,7 +32,16 @@ func (c Cmd) Wait() error {
 }
 
 func (c Cmd) isSuccessExitCode(err error) bool {
-	exitCode := err.(*exec.ExitError).ExitCode()
+	if err == nil {
+		return true
+	}
+
+	exitError, ok := err.(*exec.ExitError);
+	if !ok {
+		return false
+	}
+
+	exitCode := exitError.ExitCode()
 
 	if exitCode == 0 {
 		return true
