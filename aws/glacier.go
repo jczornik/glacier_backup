@@ -16,12 +16,12 @@ import (
 
 const (
 	multipartThreshold = 1024 * 1024 * 100
-	partSize = 1024 * 1024 * 64
+	partSize           = 1024 * 1024 * 64
 )
 
 type part struct {
-	reader io.Reader
-	sha256 string
+	reader       io.Reader
+	sha256       string
 	contentRange string
 }
 
@@ -71,7 +71,7 @@ func initiateMultipart(client *glacier.Client, account string, vault string) (st
 func getPart(file *os.File, fileSize int64, partNumber int64, buffer []byte) (part, error) {
 	start := partSize * (partNumber - 1)
 	end := start + partSize
-	if fileSize - partNumber * partSize < 0 {
+	if fileSize-partNumber*partSize < 0 {
 		size := fileSize - start
 		end = start + size
 	}
@@ -82,7 +82,7 @@ func getPart(file *os.File, fileSize int64, partNumber int64, buffer []byte) (pa
 	treeHash := computeTreeHash(hashes)
 	sha256Str := fmt.Sprintf("%x", treeHash)
 
-	return part{reader, sha256Str, fmt.Sprintf("bytes %d-%d/*", start, end - 1)}, err
+	return part{reader, sha256Str, fmt.Sprintf("bytes %d-%d/*", start, end-1)}, err
 }
 
 func uploadPart(client *glacier.Client, account string, vault string, uploadId string, part part) ([]byte, error) {
@@ -120,11 +120,11 @@ func abortMultipart(client *glacier.Client, account string, vault string, upload
 func completeMultipart(client *glacier.Client, account string, vault string, uploadId string, size int64, sha256 string) error {
 	sizeStr := strconv.Itoa(int(size))
 	input := glacier.CompleteMultipartUploadInput{
-		AccountId: &account,
-		VaultName: &vault,
-		UploadId:  &uploadId,
+		AccountId:   &account,
+		VaultName:   &vault,
+		UploadId:    &uploadId,
 		ArchiveSize: &sizeStr,
-		Checksum: &sha256,
+		Checksum:    &sha256,
 	}
 
 	_, err := client.CompleteMultipartUpload(context.TODO(), &input)
@@ -141,7 +141,7 @@ func uploadMultipart(client *glacier.Client, account string, vault string, file 
 	}
 
 	nPartsToSend := int64(fileSize / partSize)
-	if fileSize % partSize != 0 {
+	if fileSize%partSize != 0 {
 		nPartsToSend += 1
 	}
 

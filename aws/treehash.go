@@ -8,7 +8,7 @@ const chunkSize = 1024 * 1024
 
 func computeHashes(buffer []byte) [][]byte {
 	hashCount := len(buffer) / chunkSize
-	if len(buffer) % chunkSize != 0 {
+	if len(buffer)%chunkSize != 0 {
 		hashCount += 1
 	}
 
@@ -18,7 +18,7 @@ func computeHashes(buffer []byte) [][]byte {
 		if last > len(buffer) {
 			last = len(buffer)
 		}
-		h := sha256.Sum256(buffer[i*chunkSize:last])
+		h := sha256.Sum256(buffer[i*chunkSize : last])
 		hashes[i] = h[:]
 	}
 

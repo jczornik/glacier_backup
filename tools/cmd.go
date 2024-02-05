@@ -33,7 +33,7 @@ func (c Cmd) isSuccessExitCode(err error) bool {
 		return true
 	}
 
-	exitError, ok := err.(*exec.ExitError);
+	exitError, ok := err.(*exec.ExitError)
 	if !ok {
 		return false
 	}
