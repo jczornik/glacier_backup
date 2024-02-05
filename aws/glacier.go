@@ -47,7 +47,23 @@ func upload(client *glacier.Client, account string, vault string, file *os.File)
 		Body:      file,
 	}
 
-	_, err := client.UploadArchive(context.TODO(), &input)
+	r, err := client.UploadArchive(context.TODO(), &input)
+	if err != nil {
+		return err
+	}
+
+	file.Seek(0, 0)
+	content, err := io.ReadAll(file)
+	if err != nil {
+		return err
+	}
+
+	hashes := computeHashes(content)
+	treeHash := computeTreeHash(hashes)
+
+	if *r.Checksum != hex.EncodeToString(treeHash) {
+		return errors.New("Checksums mismatch")
+	}
 
 	return err
 }
