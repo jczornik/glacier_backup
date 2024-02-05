@@ -3,10 +3,10 @@ package aws
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
+	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strconv"
 
@@ -16,7 +16,7 @@ import (
 
 const (
 	multipartThreshold = 1024 * 1024 * 100
-	partSize = 1024 * 1024 * 4
+	partSize = 1024 * 1024 * 64
 )
 
 type part struct {
@@ -68,48 +68,45 @@ func initiateMultipart(client *glacier.Client, account string, vault string) (st
 	return *resp.UploadId, nil
 }
 
-func getPart(file *os.File, fileSize int64, partNumber int64, dbuffer []byte) (part, error) {
-	buffer := &dbuffer
+func getPart(file *os.File, fileSize int64, partNumber int64, buffer []byte) (part, error) {
 	start := partSize * (partNumber - 1)
-	fmt.Printf("Start: %d\n", start)
 	end := start + partSize
-	fmt.Printf("End: %d\n", end)
 	if fileSize - partNumber * partSize < 0 {
 		size := fileSize - start
-		fmt.Printf("fileSize: %d\n", fileSize)
-		fmt.Printf("Size: %d\n", size)
-		b := make([]byte, size)
-		buffer = &b
 		end = start + size
 	}
 
-	_, err := file.Read(*buffer)
-	reader := bytes.NewReader(*buffer)
-	sha256 := sha256.New()
-	sha256.Write(*buffer)
-	sha256Str := fmt.Sprintf("%x", sha256.Sum(nil))
+	n, err := file.Read(buffer)
+	reader := bytes.NewReader(buffer[:n])
+	hashes := computeHashes(buffer[:n])
+	treeHash := computeTreeHash(hashes)
+	sha256Str := fmt.Sprintf("%x", treeHash)
 
 	return part{reader, sha256Str, fmt.Sprintf("bytes %d-%d/*", start, end - 1)}, err
 }
 
-func uploadPart(client *glacier.Client, account string, vault string, uploadId string, part part) error {
-	log.Println("Uploading part")
-	log.Println("Part SHA256: ", part.sha256)
+func uploadPart(client *glacier.Client, account string, vault string, uploadId string, part part) ([]byte, error) {
 	input := glacier.UploadMultipartPartInput{
 		AccountId: &account,
 		Body:      part.reader,
 		VaultName: &vault,
 		UploadId:  &uploadId,
-		// Checksum:  &part.sha256,
 		Range:     &part.contentRange,
 	}
 
-	_, err := client.UploadMultipartPart(context.TODO(), &input)
-	return err
+	r, err := client.UploadMultipartPart(context.TODO(), &input)
+	if err != nil {
+		return nil, err
+	}
+
+	if *r.Checksum != part.sha256 {
+		return nil, errors.New("Checksums mismatch")
+	}
+
+	return hex.DecodeString(*r.Checksum)
 }
 
 func abortMultipart(client *glacier.Client, account string, vault string, uploadId string) error {
-	log.Println("Aborting multipart")
 	input := glacier.AbortMultipartUploadInput{
 		AccountId: &account,
 		VaultName: &vault,
@@ -121,7 +118,6 @@ func abortMultipart(client *glacier.Client, account string, vault string, upload
 }
 
 func completeMultipart(client *glacier.Client, account string, vault string, uploadId string, size int64, sha256 string) error {
-	log.Println("Completing multipart")
 	sizeStr := strconv.Itoa(int(size))
 	input := glacier.CompleteMultipartUploadInput{
 		AccountId: &account,
@@ -135,21 +131,7 @@ func completeMultipart(client *glacier.Client, account string, vault string, upl
 	return err
 }
 
-func calculateHash(file *os.File) (string, error) {
-	hash := sha256.New()
-	_, err := io.Copy(hash, file)
-	if err != nil {
-		return "", err
-	}
-
-	hashStr := fmt.Sprintf("%x", hash.Sum(nil))
-	log.Println("File Hash: ", hashStr)
-	return hashStr, nil
-}
-
-
 func uploadMultipart(client *glacier.Client, account string, vault string, file *os.File, fileSize int64) error {
-	log.Println("Uploading multipart")
 	partNumber := int64(1)
 	dBuffer := make([]byte, partSize)
 
@@ -158,15 +140,20 @@ func uploadMultipart(client *glacier.Client, account string, vault string, file 
 		return err
 	}
 
-	log.Printf("Upload ID: %s\n", uploadId)
+	nPartsToSend := int64(fileSize / partSize)
+	if fileSize % partSize != 0 {
+		nPartsToSend += 1
+	}
 
-	for sent := int64(0); sent < fileSize; sent += partSize {
+	checksums := make([][]byte, nPartsToSend)
+
+	for i := int64(0); i < nPartsToSend; i += 1 {
 		part, err := getPart(file, fileSize, partNumber, dBuffer)
 		if err != nil && err != io.EOF {
 			return err
 		}
 
-		uploadErr := uploadPart(client, account, vault, uploadId, part)
+		hash, uploadErr := uploadPart(client, account, vault, uploadId, part)
 		if uploadErr != nil {
 			if err := abortMultipart(client, account, vault, uploadId); err != nil {
 				return err
@@ -175,6 +162,7 @@ func uploadMultipart(client *glacier.Client, account string, vault string, file 
 			return uploadErr
 		}
 
+		checksums[i] = hash
 		partNumber++
 
 		if err == io.EOF {
@@ -183,16 +171,15 @@ func uploadMultipart(client *glacier.Client, account string, vault string, file 
 		}
 	}
 
-	hash, err := calculateHash(file)
 	if err != nil {
-		log.Println("Error while calculating hash")
 		if err := abortMultipart(client, account, vault, uploadId); err != nil {
 			return err
 		}
 		return err
 	}
 
-	if err := completeMultipart(client, account, vault, uploadId, fileSize, hash); err != nil {
+	treeHash := computeTreeHash(checksums)
+	if err := completeMultipart(client, account, vault, uploadId, fileSize, fmt.Sprintf("%x", treeHash)); err != nil {
 		if err := abortMultipart(client, account, vault, uploadId); err != nil {
 			return err
 		}
