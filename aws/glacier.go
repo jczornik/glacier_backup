@@ -41,10 +41,13 @@ func GetVaults(cfg aws.Config, account string) ([]string, error) {
 }
 
 func upload(client *glacier.Client, account string, vault string, file *os.File) error {
+	fileName := file.Name()
+
 	input := glacier.UploadArchiveInput{
 		AccountId: &account,
 		VaultName: &vault,
 		Body:      file,
+		ArchiveDescription: &fileName,
 	}
 
 	r, err := client.UploadArchive(context.TODO(), &input)
@@ -68,12 +71,13 @@ func upload(client *glacier.Client, account string, vault string, file *os.File)
 	return err
 }
 
-func initiateMultipart(client *glacier.Client, account string, vault string) (string, error) {
+func initiateMultipart(client *glacier.Client, account string, vault string, fileName string) (string, error) {
 	size := strconv.Itoa(partSize)
 	input := glacier.InitiateMultipartUploadInput{
 		AccountId: &account,
 		VaultName: &vault,
 		PartSize:  &size,
+		ArchiveDescription: &fileName,
 	}
 
 	resp, err := client.InitiateMultipartUpload(context.TODO(), &input)
@@ -151,7 +155,7 @@ func uploadMultipart(client *glacier.Client, account string, vault string, file 
 	partNumber := int64(1)
 	dBuffer := make([]byte, partSize)
 
-	uploadId, err := initiateMultipart(client, account, vault)
+	uploadId, err := initiateMultipart(client, account, vault, file.Name())
 	if err != nil {
 		return err
 	}
