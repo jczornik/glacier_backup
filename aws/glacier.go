@@ -44,9 +44,9 @@ func upload(client *glacier.Client, account string, vault string, file *os.File)
 	fileName := file.Name()
 
 	input := glacier.UploadArchiveInput{
-		AccountId: &account,
-		VaultName: &vault,
-		Body:      file,
+		AccountId:          &account,
+		VaultName:          &vault,
+		Body:               file,
 		ArchiveDescription: &fileName,
 	}
 
@@ -74,9 +74,9 @@ func upload(client *glacier.Client, account string, vault string, file *os.File)
 func initiateMultipart(client *glacier.Client, account string, vault string, fileName string) (string, error) {
 	size := strconv.Itoa(partSize)
 	input := glacier.InitiateMultipartUploadInput{
-		AccountId: &account,
-		VaultName: &vault,
-		PartSize:  &size,
+		AccountId:          &account,
+		VaultName:          &vault,
+		PartSize:           &size,
 		ArchiveDescription: &fileName,
 	}
 
