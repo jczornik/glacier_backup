@@ -5,13 +5,22 @@
 The goal of this project is to provide a simple way to create an incremental backup and upload
 it to some cloud storage.
 
-# Current functionalities
+## How `glacier_backup` works?
 
-Currently, you can:
+The goal is to create a remote backup of local files. To achive this it will execute following steps:
 
-* Create an incremental backup,
-* Encrypt backup,
-* Upload backup to the AWS Glacier.
+1. Check if previous backup, for given source was successfull and if can proceed with creating new one,
+2. Create a local, increamental `tar` archive,
+3. Encrypt local backup,
+4. Upload archive to `AWS Glacier`,
+5. Remove local copy,
+6. Save progress to local database.
+
+## How this software checks if backup is not corrupted?
+
+1. The status of previous backups is stored in the local database. In case the previous backup was not successful/rollbacked, `glacier_backup` will prevent the creation of new backups.
+2. If any of the steps fail, we will try to rollback all changes to leave everything in the last save state.
+3. When uploading data to `AWS glacier`, we check data integrity by comparing the checksum of the local copy with that received from `AWS`.
 
 # Dependencies
 
@@ -65,6 +74,23 @@ aws:
 ```
 
 There are only two settings: profile and account. The `profile` specifies the profile you configured while setting up AWS, while the `account` is your AWS account.
+
+## Local db configuration
+
+`glacier_backup` stores some important metadata in the local database. This data is crucial for the correct operation of the program. In the DB are stored:
+
+* status of workflows,
+* status of jobs in given workflow,
+* time of workflow creation.
+
+This data will be used to determine if the previous backup workflow was successful and if the new one can be safely created.
+
+Example configuration:
+
+```yaml
+db:
+  path: "/path/to/local/db"
+```
 
 # Running glacier_backup:
 
