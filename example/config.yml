@@ -2,8 +2,12 @@ backup:
     - src: "/path/to/backup/src"
       dst: "/path/to/backup/dst"
       keep: false
+      canChange: false
       vault: "glacierVaultName"
       password: "1234"
 aws:
   profile: "aws_profile_name"
   account: "123456789"
+
+db:
+  path: "/path/to/local/db"
