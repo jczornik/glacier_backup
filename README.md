@@ -85,6 +85,13 @@ There are only two settings: profile and account. The `profile` specifies the pr
 
 This data will be used to determine if the previous backup workflow was successful and if the new one can be safely created.
 
+Example configuration:
+
+```yaml
+db:
+  path: "/path/to/local/db"
+```
+
 # Running glacier_backup:
 
 First, download the latest release. I suggest adding it to `/usr/bin` so it will be available without providing the absolute path:
