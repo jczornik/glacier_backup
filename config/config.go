@@ -16,7 +16,7 @@ type AwsSharedProfile = string
 type BackupConfig struct {
 	Src       BackupSrc `yaml:"src"`
 	Dst       BackupDst `yaml:"dst"`
-	CanChange bool      `yaml:"canChange,default=false"`
+	CanChange bool      `yaml:"canChange"`
 	Keep      bool      `yaml:"keep"`
 	Vault     VaultName `yaml:"vault"`
 	Pass      string    `yaml:"password"`
