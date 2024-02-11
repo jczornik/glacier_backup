@@ -29,56 +29,46 @@ func checkIfCanCreate(db *sql.DB, name string) (bool, error) {
 	return (*status == workflows.FinishedStatus || *status == workflows.RollbackedStatus), nil
 }
 
-func NewPWorkflow(name string, tasks []task, client persistent.DBClient) (PWorkflow, error) {
+func NewPWorkflow(name string, client persistent.DBClient) (*PWorkflow, error) {
 	db, err := client.OpenDB()
 	if err != nil {
-		return PWorkflow{}, err
+		return &PWorkflow{}, err
 	}
 	defer db.Close()
 
 	canCreate, err := checkIfCanCreate(db, name)
 	if err != nil {
-		return PWorkflow{}, err
+		return &PWorkflow{}, err
 	}
 
 	if canCreate == false {
-		return PWorkflow{}, errors.New(fmt.Sprintf("Cannot create new workflow %s. Last workflow failed to rollback", name))
+		return &PWorkflow{}, errors.New(fmt.Sprintf("Cannot create new workflow %s. Last workflow failed to rollback", name))
 	}
 
 	tx, err := db.Begin()
 	if err != nil {
-		return PWorkflow{}, err
+		return &PWorkflow{}, err
 	}
 
 	id, err := workflows.Create(tx, name)
 	if err != nil {
 		terr := tx.Rollback()
 		if terr != nil {
-			return PWorkflow{}, terr
+			return &PWorkflow{}, terr
 		}
-		return PWorkflow{}, err
+		return &PWorkflow{}, err
 	}
 
-	ptasks := make([]task, len(tasks))
-	for i, t := range tasks {
-		pt, err := newPTask(client, t, id, tx)
-		if err != nil {
-			if err := tx.Rollback(); err != nil {
-				return PWorkflow{}, err
-			}
-			return PWorkflow{}, err
-		}
-
-		ptasks[i] = pt
-	}
-
-	workflow := BasicWorkflow{ptasks}
+	workflow := newBasicWorkflow(nil)
 	err = tx.Commit()
+	if err != nil {
+		return &PWorkflow{}, err
+	}
 
-	return PWorkflow{id, workflow, client}, nil
+	return &PWorkflow{id, workflow, client}, nil
 }
 
-func (flow PWorkflow) Exec() *WorkflowError {
+func (flow *PWorkflow) Exec() *WorkflowError {
 	db, dbErr := flow.db.OpenDB()
 	if dbErr != nil {
 		return &WorkflowError{dbErr, nil}
@@ -108,4 +98,37 @@ func (flow PWorkflow) Exec() *WorkflowError {
 	}
 
 	return err
+}
+
+func (flow *PWorkflow) AddTasks(tasks []task) error {
+	ptasks := make([]task, len(tasks))
+	db, err := flow.db.OpenDB()
+	if err != nil {
+		return err
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	for i, t := range tasks {
+		pt, err := newPTask(flow.db, t, flow.id, tx)
+		if err != nil {
+			if err := tx.Rollback(); err != nil {
+				return err
+			}
+			return err
+		}
+
+		ptasks[i] = pt
+	}
+
+	flow.workflow.AddTasks(ptasks)
+
+	return tx.Commit()
+}
+
+func (flow *PWorkflow) Id() int64 {
+	return flow.id
 }
