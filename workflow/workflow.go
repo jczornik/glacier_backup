@@ -2,8 +2,6 @@ package workflow
 
 import (
 	"fmt"
-
-	"github.com/jczornik/glacier_backup/persistent"
 )
 
 type task interface {
@@ -23,17 +21,18 @@ func (error WorkflowError) Error() string {
 
 type Workflow interface {
 	Exec() *WorkflowError
+	AddTasks([]task) error
 }
 
 type BasicWorkflow struct {
 	tasks []task
 }
 
-func newBasicWorkflow(tasks []task, client persistent.DBClient) Workflow {
-	return BasicWorkflow{tasks}
+func newBasicWorkflow(tasks []task) Workflow {
+	return &BasicWorkflow{tasks}
 }
 
-func (flow BasicWorkflow) Exec() *WorkflowError {
+func (flow *BasicWorkflow) Exec() *WorkflowError {
 	for i, task := range flow.tasks {
 		if execError := task.Exec(); execError != nil {
 			if rollbackError := flow.rollback(i); rollbackError != nil {
@@ -47,12 +46,17 @@ func (flow BasicWorkflow) Exec() *WorkflowError {
 	return nil
 }
 
-func (flow BasicWorkflow) rollback(idx int) error {
+func (flow *BasicWorkflow) rollback(idx int) error {
 	for i := idx; i >= 0; i-- {
 		if err := flow.tasks[i].Rollback(); err != nil {
 			return err
 		}
 	}
 
+	return nil
+}
+
+func (flow *BasicWorkflow) AddTasks(tasks []task) error {
+	flow.tasks = append(flow.tasks, tasks...)
 	return nil
 }

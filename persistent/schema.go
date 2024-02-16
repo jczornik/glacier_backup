@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/jczornik/glacier_backup/persistent/artifacts"
 	"github.com/jczornik/glacier_backup/persistent/tasks"
 	"github.com/jczornik/glacier_backup/persistent/workflows"
 )
@@ -77,7 +78,7 @@ func createSchema(db *sql.DB) error {
 		return err
 	}
 
-	toCreate := []func(*sql.Tx) error{workflows.CreateTable, tasks.CreateTable, setVersion}
+	toCreate := []func(*sql.Tx) error{workflows.CreateTable, tasks.CreateTable, artifacts.CreateTable, setVersion}
 
 	for _, fn := range toCreate {
 		if err := createOrRollback(tx, fn); err != nil {
