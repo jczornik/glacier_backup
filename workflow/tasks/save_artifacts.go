@@ -85,7 +85,7 @@ func (t *SaveArtifactsTask) Rollback() error {
 		log.Println("Error while opening db for rollback")
 	}
 
-	_, err = db.Exec("DELETE FROM workflow_artifacts WHERE id = ?", *t.savedArtifactId)
+	err = artifacts.Delete(db, *t.savedArtifactId)
 	if err != nil {
 		log.Println("Error while removing artifact from db")
 		return err

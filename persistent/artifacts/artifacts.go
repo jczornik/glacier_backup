@@ -39,3 +39,8 @@ func Create(db *sql.DB, archive string, manifest string, mcontent []byte, workfl
 
 	return artifactid, err
 }
+
+func Delete(db *sql.DB, id int64) error {
+	_, err := db.Exec("DELETE FROM workflow_artifact WHERE id = ?", id)
+	return err
+}
