@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"strconv"
 
@@ -16,7 +17,9 @@ import (
 
 const (
 	multipartThreshold = 1024 * 1024 * 100
-	partSize           = 1024 * 1024 * 64
+	minPartSize        = 1024 * 1024
+	maxPartSize        = 1024 * 1024 * 1024 * 4
+	maxParts           = 10000
 )
 
 type part struct {
@@ -71,8 +74,43 @@ func upload(client *glacier.Client, account string, vault string, file *os.File)
 	return err
 }
 
-func initiateMultipart(client *glacier.Client, account string, vault string, fileName string) (string, error) {
-	size := strconv.Itoa(partSize)
+func powInt(x, y int) int64 {
+	return int64(math.Pow(float64(x), float64(y)))
+}
+
+func computePartSize(archiveSize int64) (int64, error) {
+	var partSize int64
+	if archiveSize < minPartSize {
+		return partSize, errors.New("Archive size is too small")
+	}
+
+	if archiveSize > maxPartSize*maxParts {
+		return partSize, errors.New("Archive size is too big")
+	}
+
+	partSize = archiveSize / maxParts
+	fmt.Printf("Part size: %d\n", partSize)
+
+	mult := 0
+	for minPartSize*powInt(2, mult) < partSize {
+		mult++
+	}
+
+	partSize = minPartSize * powInt(2, mult)
+	numOfParts := archiveSize / partSize
+	if archiveSize%partSize != 0 {
+		numOfParts += 1
+	}
+
+	if numOfParts > maxParts {
+		partSize *= 2
+	}
+
+	return partSize, nil
+}
+
+func initiateMultipart(client *glacier.Client, account string, vault string, fileName string, partSize int64) (string, error) {
+	size := strconv.FormatInt(partSize, 10)
 	input := glacier.InitiateMultipartUploadInput{
 		AccountId:          &account,
 		VaultName:          &vault,
@@ -88,7 +126,7 @@ func initiateMultipart(client *glacier.Client, account string, vault string, fil
 	return *resp.UploadId, nil
 }
 
-func getPart(file *os.File, fileSize int64, partNumber int64, buffer []byte) (part, error) {
+func getPart(file *os.File, fileSize int64, partNumber int64, buffer []byte, partSize int64) (part, error) {
 	start := partSize * (partNumber - 1)
 	end := start + partSize
 	if fileSize-partNumber*partSize < 0 {
@@ -153,9 +191,14 @@ func completeMultipart(client *glacier.Client, account string, vault string, upl
 
 func uploadMultipart(client *glacier.Client, account string, vault string, file *os.File, fileSize int64) error {
 	partNumber := int64(1)
+	partSize, err := computePartSize(fileSize)
+	if err != nil {
+		return err
+	}
+
 	dBuffer := make([]byte, partSize)
 
-	uploadId, err := initiateMultipart(client, account, vault, file.Name())
+	uploadId, err := initiateMultipart(client, account, vault, file.Name(), partSize)
 	if err != nil {
 		return err
 	}
@@ -168,7 +211,7 @@ func uploadMultipart(client *glacier.Client, account string, vault string, file 
 	checksums := make([][]byte, nPartsToSend)
 
 	for i := int64(0); i < nPartsToSend; i += 1 {
-		part, err := getPart(file, fileSize, partNumber, dBuffer)
+		part, err := getPart(file, fileSize, partNumber, dBuffer, partSize)
 		if err != nil && err != io.EOF {
 			return err
 		}
