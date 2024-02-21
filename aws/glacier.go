@@ -26,6 +26,7 @@ type part struct {
 	reader       io.Reader
 	sha256       string
 	contentRange string
+	partNo       int64
 }
 
 func GetVaults(cfg aws.Config, account string) ([]string, error) {
@@ -139,7 +140,7 @@ func getPart(file *os.File, fileSize int64, partNumber int64, buffer []byte, par
 	treeHash := computeTreeHash(hashes)
 	sha256Str := fmt.Sprintf("%x", treeHash)
 
-	return part{reader, sha256Str, fmt.Sprintf("bytes %d-%d/*", start, end-1)}, err
+	return part{reader, sha256Str, fmt.Sprintf("bytes %d-%d/*", start, end-1), partNumber}, err
 }
 
 func uploadPart(client *glacier.Client, account string, vault string, uploadId string, part part) ([]byte, error) {
@@ -188,8 +189,7 @@ func completeMultipart(client *glacier.Client, account string, vault string, upl
 	return err
 }
 
-func uploadMultipart(client *glacier.Client, account string, vault string, file *os.File, fileSize int64) error {
-	partNumber := int64(1)
+func uploadMultipart(client *glacier.Client, account string, vault string, file *os.File, fileSize int64, cfg aws.Config) error {
 	partSize, err := computePartSize(fileSize)
 	if err != nil {
 		return err
@@ -208,29 +208,34 @@ func uploadMultipart(client *glacier.Client, account string, vault string, file 
 	}
 
 	checksums := make([][]byte, nPartsToSend)
+	uploader := newMultipartUploader(client, account, vault, uploadId, 30, cfg)
+	defer uploader.close()
 
 	for i := int64(0); i < nPartsToSend; i += 1 {
+		partNumber := i + 1
 		part, err := getPart(file, fileSize, partNumber, dBuffer, partSize)
 		if err != nil && err != io.EOF {
 			return err
 		}
 
-		hash, uploadErr := uploadPart(client, account, vault, uploadId, part)
-		if uploadErr != nil {
-			if err := abortMultipart(client, account, vault, uploadId); err != nil {
-				return err
-			}
-
-			return uploadErr
-		}
-
-		checksums[i] = hash
-		partNumber++
-
+		uploader.upload(part)
 		if err == io.EOF {
 			// TODO: check if it is necessary
 			break
 		}
+	}
+
+	results := uploader.getResults()
+	for _, res := range results {
+		if res.err != nil {
+			if err := abortMultipart(client, account, vault, uploadId); err != nil {
+				return err
+			}
+			return res.err
+		}
+
+		fmt.Printf("Saving checksum for part %d\n", res.partNo)
+		checksums[res.partNo - 1] = res.checksum
 	}
 
 	if err != nil {
@@ -267,7 +272,7 @@ func UploadData(cfg aws.Config, account string, vault string, archive string) er
 	client := glacier.NewFromConfig(cfg)
 
 	if size >= multipartThreshold {
-		return uploadMultipart(client, account, vault, file, size)
+		return uploadMultipart(client, account, vault, file, size, cfg)
 	} else {
 		return upload(client, account, vault, file)
 	}
