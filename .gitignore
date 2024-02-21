@@ -22,3 +22,5 @@ go.work
 
 # Binary
 glacier_backup
+
+core
