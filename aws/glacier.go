@@ -89,7 +89,6 @@ func computePartSize(archiveSize int64) (int64, error) {
 	}
 
 	partSize = archiveSize / maxParts
-	fmt.Printf("Part size: %d\n", partSize)
 
 	mult := 0
 	for minPartSize*powInt(2, mult) < partSize {
