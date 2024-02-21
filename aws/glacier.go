@@ -176,7 +176,7 @@ func abortMultipart(client *glacier.Client, account string, vault string, upload
 }
 
 func completeMultipart(client *glacier.Client, account string, vault string, uploadId string, size int64, sha256 string) error {
-	sizeStr := strconv.Itoa(int(size))
+	sizeStr := strconv.FormatInt(size, 10)
 	input := glacier.CompleteMultipartUploadInput{
 		AccountId:   &account,
 		VaultName:   &vault,
