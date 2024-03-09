@@ -1,5 +1,3 @@
-**WARNING: This is an alpha release - don't use it for essential files. Suggestions are welcome!**
-
 # What is this program for?
 
 The goal of this project is to provide a simple way to create an incremental backup and upload
