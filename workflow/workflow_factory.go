@@ -19,11 +19,12 @@ func NewEncryptedBackup(conf config.BackupConfig, awsConf config.AWSConfig, db p
 	preserveManifest := tasks.NewPreserveTask(conf.Src, conf.Dst)
 	artifacts := backup.NewArtifactNames(conf.Src, conf.Dst)
 	encBackup := tasks.NewEncryptedBackupTask(conf.Src, artifacts, conf.Pass, conf.CanChange)
-	upload := tasks.NewUploadToGlacierTask(artifacts.Archive, awsConf.AccountID, conf.Vault, awsConf.Profile)
-	saveArtifacts := tasks.NewSaveArtifactsTask(artifacts.Snapshot, artifacts.Archive, db, workflow.Id())
-	cleanup := tasks.NewCleanupTask(conf.Src, conf.Dst, artifacts, conf.Keep)
+	// upload := tasks.NewUploadToGlacierTask(artifacts.Archive, awsConf.AccountID, conf.Vault, awsConf.Profile)
+	// saveArtifacts := tasks.NewSaveArtifactsTask(artifacts.Snapshot, artifacts.Archive, db, workflow.Id())
+	// cleanup := tasks.NewCleanupTask(conf.Src, conf.Dst, artifacts, conf.Keep)
 
-	tasks := []task{preserveManifest, encBackup, upload, saveArtifacts, cleanup}
+	// tasks := []task{preserveManifest, encBackup, upload, saveArtifacts, cleanup}
+	tasks := []task{preserveManifest, encBackup}
 
 	err = workflow.AddTasks(tasks)
 	return workflow, err
